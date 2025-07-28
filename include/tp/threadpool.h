@@ -58,7 +58,8 @@ public:
             auto taskDropped = std::make_shared<std::packaged_task<Ret()>>(
                 []() -> Ret { return Ret(); }
             );
-            return task->get_future();
+            (*taskDropped)();
+            return taskDropped->get_future();
         }
 
         taskQue_.emplace([=] { (*task)(); });
@@ -97,10 +98,26 @@ public:
 
     void setMode(const PoolMode poolMode) {
         if (isWorking_) {
-            LOGERROR("setMode failed, please setMode before start\n");
+            LOGERROR("setMode failed, please do before start\n");
             return;
         }
         poolMode_ = poolMode;
+    }
+
+    void setTaskMaxNum(const size_t taskMaxNum) {
+        if (isWorking_) {
+            LOGERROR("setTaskMaxNum failed, please do before start\n");
+            return;
+        }
+        taskMaxNum_ = taskMaxNum;
+    }
+
+    void setThreadMaxNum(const size_t threadMaxNum) {
+        if (isWorking_) {
+            LOGERROR("setThreadMaxNum failed, please do before start\n");
+            return;
+        }
+        threadMaxNum_ = threadMaxNum;
     }
 
 private:

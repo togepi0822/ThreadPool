@@ -4,6 +4,8 @@
 
 #include <future>
 #include <cassert>
+#include <chrono>
+#include <thread>
 
 using namespace tp;
 
@@ -12,6 +14,17 @@ using uLong = unsigned long;
 uLong sum(const int a, const int b) {
     assert(a <= b);
 
+    uLong res = 0;
+    for (int i = a; i <= b; ++i) {
+        res += i;
+    }
+    return res;
+}
+
+uLong sum_delay(const int a, const int b) {
+    assert(a <= b);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     uLong res = 0;
     for (int i = a; i <= b; ++i) {
         res += i;
@@ -45,4 +58,20 @@ TEST(threadpool, FIXED) {
     pool.submitTask(sum, 4001, 5000);
 
     ASSERT_EQ(3849838848, res1.get() + res2.get());
+}
+
+TEST(threadpool, SubmissionTimeOut) {
+    ThreadPool pool;
+    pool.setMode(PoolMode::FIXED);
+    pool.setTaskMaxNum(2);
+    pool.start(2);
+
+    std::future<uLong> res1 = pool.submitTask(sum_delay, 1, 100'000'000);
+    std::future<uLong> res2 = pool.submitTask(sum_delay, 100'000'001, 200'000'000);
+    pool.submitTask(sum_delay, 2001, 3000);
+    pool.submitTask(sum_delay, 3001, 4000);
+    std::future<uLong> res3 = pool.submitTask(sum_delay, 4001, 5000);
+
+    ASSERT_EQ(3849838848, res1.get() + res2.get());
+    ASSERT_EQ(0, res3.get());
 }
