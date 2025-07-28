@@ -6,6 +6,7 @@
 #include <cassert>
 #include <chrono>
 #include <thread>
+#include <string>
 
 using namespace tp;
 
@@ -30,6 +31,10 @@ uLong sum_delay(const int a, const int b) {
         res += i;
     }
     return res;
+}
+
+std::string add(const std::string& a, const std::string& b) {
+    return a + b;
 }
 
 TEST(threadpool, CACHED) {
@@ -74,4 +79,14 @@ TEST(threadpool, SubmissionTimeOut) {
 
     ASSERT_EQ(3849838848, res1.get() + res2.get());
     ASSERT_EQ(0, res3.get());
+}
+
+TEST(threadpool, SubmissionWithLvalueAndRvalue) {
+    ThreadPool pool;
+    pool.start(2);
+
+    std::string s{"hello "};
+    std::future<std::string> res = pool.submitTask(add, s, "world");
+
+    ASSERT_EQ(std::string{"hello world"}, res.get());
 }
