@@ -27,12 +27,16 @@ class ThreadPool {
     using Task = std::function<void()>;
 
 public:
-    explicit ThreadPool(const int threadMaxNum = THREAD_MAX_NUM,
-        const int taskMaxNum = TASK_MAX_NUM,
-        const PoolMode poolMode = PoolMode::FIXED)
+    explicit ThreadPool(const PoolMode poolMode = PoolMode::FIXED,
+        const size_t initThreadNum = std::thread::hardware_concurrency(),
+        const size_t threadMaxNum = THREAD_MAX_NUM,
+        const size_t taskMaxNum = TASK_MAX_NUM)
         : threadMaxNum_(threadMaxNum),
+          initThreadNum_(initThreadNum),
           taskMaxNum_(taskMaxNum),
-          poolMode_(poolMode) {}
+          poolMode_(poolMode) {
+        init();
+    }
 
     ~ThreadPool() {
         isWorking_ = false;
@@ -86,9 +90,10 @@ public:
         return task->get_future();
     }
 
-    void start(const int initThreadNum = static_cast<int>(std::thread::hardware_concurrency())) {
-        initThreadNum_ = initThreadNum;
 
+
+private:
+    void init() {
         for (size_t i = 0; i < initThreadNum_; ++i) {
             auto ptr = std::make_unique<Thread>([this](const int id) { this->threadFunc(id); });
             int threadId = ptr->getId();
@@ -103,7 +108,6 @@ public:
         isWorking_ = true;
     }
 
-private:
     void threadFunc(const int threadId) {
         using std::chrono::seconds;
         using std::chrono::high_resolution_clock;
