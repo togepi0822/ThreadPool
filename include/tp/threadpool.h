@@ -103,30 +103,6 @@ public:
         isWorking_ = true;
     }
 
-    void setMode(const PoolMode poolMode) {
-        if (isWorking_) {
-            LOGERROR("setMode failed, please do before start\n");
-            return;
-        }
-        poolMode_ = poolMode;
-    }
-
-    void setTaskMaxNum(const size_t taskMaxNum) {
-        if (isWorking_) {
-            LOGERROR("setTaskMaxNum failed, please do before start\n");
-            return;
-        }
-        taskMaxNum_ = taskMaxNum;
-    }
-
-    void setThreadMaxNum(const size_t threadMaxNum) {
-        if (isWorking_) {
-            LOGERROR("setThreadMaxNum failed, please do before start\n");
-            return;
-        }
-        threadMaxNum_ = threadMaxNum;
-    }
-
 private:
     void threadFunc(const int threadId) {
         using std::chrono::seconds;
