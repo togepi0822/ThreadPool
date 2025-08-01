@@ -38,9 +38,7 @@ std::string add(const std::string& a, const std::string& b) {
 }
 
 TEST(threadpool, CACHED) {
-    ThreadPool pool;
-    pool.setMode(PoolMode::CACHED);
-    pool.start(2);
+    ThreadPool pool(PoolMode::CACHED, 2);
 
     std::future<uLong> res1 = pool.submitTask(sum, 1, 100'000'000);
     std::future<uLong> res2 = pool.submitTask(sum, 100'000'001, 200'000'000);
@@ -52,9 +50,7 @@ TEST(threadpool, CACHED) {
 }
 
 TEST(threadpool, FIXED) {
-    ThreadPool pool;
-    pool.setMode(PoolMode::FIXED);
-    pool.start(2);
+    ThreadPool pool(PoolMode::FIXED, 2);
 
     std::future<uLong> res1 = pool.submitTask(sum, 1, 100'000'000);
     std::future<uLong> res2 = pool.submitTask(sum, 100'000'001, 200'000'000);
@@ -66,10 +62,7 @@ TEST(threadpool, FIXED) {
 }
 
 TEST(threadpool, SubmissionTimeOut) {
-    ThreadPool pool;
-    pool.setMode(PoolMode::FIXED);
-    pool.setTaskMaxNum(2);
-    pool.start(2);
+    ThreadPool pool(PoolMode::FIXED, 2, 2);
 
     std::future<uLong> res1 = pool.submitTask(sum_delay, 1, 100'000'000);
     std::future<uLong> res2 = pool.submitTask(sum_delay, 100'000'001, 200'000'000);
@@ -82,8 +75,7 @@ TEST(threadpool, SubmissionTimeOut) {
 }
 
 TEST(threadpool, SubmissionWithLvalueAndRvalue) {
-    ThreadPool pool;
-    pool.start(2);
+    ThreadPool pool(PoolMode::FIXED, 2);
 
     std::string s{"hello "};
     std::future<std::string> res = pool.submitTask(add, s, "world");

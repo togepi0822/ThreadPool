@@ -29,8 +29,8 @@ class ThreadPool {
 public:
     explicit ThreadPool(const PoolMode poolMode = PoolMode::FIXED,
         const size_t initThreadNum = std::thread::hardware_concurrency(),
-        const size_t threadMaxNum = THREAD_MAX_NUM,
-        const size_t taskMaxNum = TASK_MAX_NUM)
+        const size_t taskMaxNum = TASK_MAX_NUM,
+        const size_t threadMaxNum = THREAD_MAX_NUM)
         : threadMaxNum_(threadMaxNum),
           initThreadNum_(initThreadNum),
           taskMaxNum_(taskMaxNum),
