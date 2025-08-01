@@ -34,7 +34,14 @@ public:
           taskMaxNum_(taskMaxNum),
           poolMode_(poolMode) {}
 
-    ~ThreadPool() = default;
+    ~ThreadPool() {
+        isWorking_ = false;
+
+        std::unique_lock<std::mutex> lock(mtx_);
+        notEmpty_.notify_all();
+
+        exit_.wait(lock, [&]() -> bool { return threads_.empty(); });
+    }
 
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
