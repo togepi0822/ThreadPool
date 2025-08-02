@@ -55,7 +55,7 @@ public:
     {}
 
     ~ThreadPool() {
-        isWorking_ = false;
+        isWorking_.store(false, std::memory_order_release);
 
         std::unique_lock<std::mutex> lock(mtx_);
         notEmpty_.notify_all();
@@ -100,7 +100,7 @@ public:
 
             threads_.emplace(threadId, std::move(ptr));
             threads_[threadId]->start(threadId);
-            ++idleThreadNum_;
+            idleThreadNum_.fetch_add(1, std::memory_order_relaxed);
         }
 
         return task->get_future();
@@ -118,10 +118,10 @@ private:
 
         for (size_t i = 0; i < initThreadNum_; ++i) {
             threads_[static_cast<int>(i)]->start(static_cast<int>(i));
-            ++idleThreadNum_;
+            idleThreadNum_.fetch_add(1, std::memory_order_relaxed);
         }
 
-        isWorking_ = true;
+        isWorking_.store(true, std::memory_order_relaxed);
     }
 
     void threadFunc(const int threadId) {
@@ -138,7 +138,7 @@ private:
                 std::unique_lock<std::mutex> lock(mtx_);
 
                 while (taskQue_.empty()) {
-                    if (!isWorking_) {
+                    if (!isWorking_.load(std::memory_order_acquire)) {
                         threads_.erase(threadId);
                         exit_.notify_all();
                         return;
@@ -151,7 +151,7 @@ private:
                             if (idleTime.count() > THREAD_MAX_IDLE_TIME
                                 && threads_.size() > initThreadNum_) {
                                 threads_.erase(threadId);
-                                --idleThreadNum_;
+                                idleThreadNum_.fetch_sub(1, std::memory_order_relaxed);
                                 exit_.notify_all();
                                 return;
                             }
@@ -161,7 +161,7 @@ private:
                     }
                 } // while (taskQue_.size() == 0)
 
-                --idleThreadNum_;
+                idleThreadNum_.fetch_sub(1, std::memory_order_relaxed);
                 task = std::move(taskQue_.front());
                 taskQue_.pop();
 
@@ -174,7 +174,7 @@ private:
             if (task != nullptr) {
                 task();
             }
-            ++idleThreadNum_;
+            idleThreadNum_.fetch_add(1, std::memory_order_relaxed);
             lastTime = high_resolution_clock::now();
         }
     }
@@ -183,8 +183,8 @@ private:
     // 线程相关
     std::unordered_map<int, std::unique_ptr<Thread>> threads_;
     size_t threadMaxNum_;
-    size_t initThreadNum_ = 0;
-    std::atomic<size_t> idleThreadNum_ = 0;
+    size_t initThreadNum_{0};
+    std::atomic<size_t> idleThreadNum_{0};
 
     // 任务队列相关
     std::queue<Task> taskQue_;
@@ -198,7 +198,7 @@ private:
 
     // 线程池工作状态相关
     PoolMode poolMode_;
-    std::atomic<bool> isWorking_ = false;
+    std::atomic<bool> isWorking_{false};
 };
 
 NAMESPACE_TP_END
