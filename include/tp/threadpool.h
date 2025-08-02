@@ -38,6 +38,10 @@ public:
         init();
     }
 
+    explicit ThreadPool()
+        : ThreadPool(PoolMode::FIXED, std::thread::hardware_concurrency(), TASK_MAX_NUM, THREAD_MAX_NUM)
+    {}
+
     explicit ThreadPool(const PoolMode poolMode)
         : ThreadPool(poolMode, std::thread::hardware_concurrency(), TASK_MAX_NUM, THREAD_MAX_NUM)
     {}
