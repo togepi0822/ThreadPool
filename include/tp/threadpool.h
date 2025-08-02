@@ -27,16 +27,32 @@ class ThreadPool {
     using Task = std::function<void()>;
 
 public:
-    explicit ThreadPool(const PoolMode poolMode = PoolMode::FIXED,
-        const size_t initThreadNum = std::thread::hardware_concurrency(),
-        const size_t taskMaxNum = TASK_MAX_NUM,
-        const size_t threadMaxNum = THREAD_MAX_NUM)
+    explicit ThreadPool(const PoolMode poolMode,
+        const size_t initThreadNum,
+        const size_t taskMaxNum,
+        const size_t threadMaxNum)
         : threadMaxNum_(threadMaxNum),
           initThreadNum_(initThreadNum),
           taskMaxNum_(taskMaxNum),
           poolMode_(poolMode) {
         init();
     }
+
+    explicit ThreadPool(const PoolMode poolMode)
+        : ThreadPool(poolMode, std::thread::hardware_concurrency(), TASK_MAX_NUM, THREAD_MAX_NUM)
+    {}
+
+    explicit ThreadPool(const size_t initThreadNum)
+        : ThreadPool(PoolMode::FIXED, initThreadNum, TASK_MAX_NUM, THREAD_MAX_NUM)
+    {}
+
+    explicit ThreadPool(const PoolMode poolMode, const size_t initThreadNum)
+        : ThreadPool(poolMode, initThreadNum, TASK_MAX_NUM, THREAD_MAX_NUM)
+    {}
+
+    explicit ThreadPool(const PoolMode poolMode, const size_t initThreadNum, const size_t taskMaxNum)
+        : ThreadPool(poolMode, initThreadNum, taskMaxNum, THREAD_MAX_NUM)
+    {}
 
     ~ThreadPool() {
         isWorking_ = false;
