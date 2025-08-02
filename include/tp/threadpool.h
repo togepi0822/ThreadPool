@@ -59,7 +59,7 @@ public:
     {}
 
     ~ThreadPool() {
-        isWorking_.store(false, std::memory_order_release);
+        isWorking_.store(false, std::memory_order_relaxed);
 
         std::unique_lock<std::mutex> lock(mtx_);
         notEmpty_.notify_all();
@@ -142,7 +142,7 @@ private:
                 std::unique_lock<std::mutex> lock(mtx_);
 
                 while (taskQue_.empty()) {
-                    if (!isWorking_.load(std::memory_order_acquire)) {
+                    if (!isWorking_.load(std::memory_order_relaxed)) {
                         threads_.erase(threadId);
                         exit_.notify_all();
                         return;
